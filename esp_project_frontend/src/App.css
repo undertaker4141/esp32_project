@@ -91,3 +91,9 @@ p {
   font-size: 1.2em;
   color: #555;
 }
+
+/*-----------------------------------------------------*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
