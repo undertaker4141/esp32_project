@@ -257,7 +257,7 @@ const Card: React.FC<CardProps> = ({ label, value, icon, imageUrl, isExpanded, o
 
 // 互動元件
 const InteractiveWidget: React.FC = () => (
-  <div className="absolute bottom-10 right-25 w-1/6 hover:w-1/3">
+  <div className="absolute bottom-10 right-25 w-1/12 hover:w-1/6">
     <img
       src="https://i.imgur.com/SUtTFrP.gif"
       alt="Interactive Widget"
