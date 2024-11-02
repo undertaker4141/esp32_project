@@ -193,7 +193,10 @@ const App: React.FC = () => {
           icon="🌫️"
           imageUrl="https://upload-os-bbs.hoyolab.com/upload/2022/07/23/1015537/18b4931f296ebeb487138caf50e299e2_4057599565959593022.png"
           isExpanded={expandedCard === "PM2.5"}
-          onClick={() => setExpandedCard(expandedCard === "PM2.5" ? null : "PM2.5")}
+          onClick={() => {
+              setExpandedCard(expandedCard === "PM2.5" ? null : "PM2.5");
+
+          }}
         />
         <Card
           label="溫度"
@@ -232,8 +235,8 @@ const App: React.FC = () => {
 const Card: React.FC<CardProps> = ({ label, value, icon, imageUrl, isExpanded, onClick }) => (
     <div
       onClick={onClick}
-      className={`flex flex-col items-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform ${
-        isExpanded ? "fixed top-1/3 left-1/2 transform -translate-x-1/2 w-1/2 h-auto z-50" : "scale-100 h-48 hover:row-span-2 hover:h-72" }`}
+      className={`flex flex-col items-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform hover:h-60 h-48  ${
+        isExpanded ? "scale-110 z-10 shadow-2xl ring-4 ring-red-600" : "scale-100 hover:row-span-2 " }`}
       style={{
         cursor: "pointer",
         transition: "height 0.3s ease, transform 0.3s ease",
@@ -254,7 +257,7 @@ const Card: React.FC<CardProps> = ({ label, value, icon, imageUrl, isExpanded, o
 
 // 互動元件
 const InteractiveWidget: React.FC = () => (
-  <div className="absolute bottom-10 right-25 w-1/6 hover:w-">
+  <div className="absolute bottom-10 right-25 w-1/6 hover:w-1/3">
     <img
       src="https://i.imgur.com/SUtTFrP.gif"
       alt="Interactive Widget"
