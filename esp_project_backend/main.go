@@ -1,48 +1,25 @@
 package main
 
 import (
+	"esp_project_backend/db"
+	"esp_project_backend/handlers"
+	"log"
 	"net/http"
-	"sync"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 )
 
-var dataStore = struct {
-	sync.RWMutex
-	Data map[string]string
-}{Data: make(map[string]string)}
-
 func main() {
-	router := gin.Default()
+	// 初始化資料庫
+	database := db.InitDB()
+	defer database.Close()
 
-	// 設定 CORS 中間件
-	router.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,                               // 允許所有來源
-		AllowMethods:    []string{"GET", "POST"},            // 允許的方法
-		AllowHeaders:    []string{"Origin", "Content-Type"}, // 允許的標頭
-	}))
+	// 建立 handler
+	sensorHandler := handlers.NewSensorHandler(database)
 
-	router.POST("/data", handleData)
-	router.GET("/data", getData)
+	// 設定路由
+	http.HandleFunc("/data", sensorHandler.SaveSensorData)
+	http.HandleFunc("/latest", sensorHandler.GetLatestSensorData)
 
-	router.Run(":8080")
-}
-
-func handleData(c *gin.Context) {
-	var data map[string]string
-	if err := c.ShouldBindJSON(&data); err == nil {
-		dataStore.Lock()
-		dataStore.Data = data
-		dataStore.Unlock()
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
-	}
-}
-
-func getData(c *gin.Context) {
-	dataStore.RLock()
-	c.JSON(http.StatusOK, dataStore.Data)
-	dataStore.RUnlock()
+	// 啟動伺服器
+	log.Println("伺服器啟動於 :8080 端口")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
