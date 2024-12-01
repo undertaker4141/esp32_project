@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type SensorHandler struct {
@@ -92,6 +93,53 @@ func (h *SensorHandler) GetLatestSensorData(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "無法取得數據", http.StatusInternalServerError)
 			return
 		}
+	}
+
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *SensorHandler) GetHistoricalData(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "只支援 GET 方法", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rows, err := h.db.Query(`
+		SELECT co2, temperature, humidity, created_at
+		FROM sensor_data
+		ORDER BY created_at DESC
+		LIMIT 100
+	`)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var data []struct {
+		CO2         string    `json:"co2"`
+		Temperature string    `json:"temperature"`
+		Humidity    string    `json:"humidity"`
+		CreatedAt   time.Time `json:"created_at"`
+	}
+
+	for rows.Next() {
+		var record struct {
+			CO2         string    `json:"co2"`
+			Temperature string    `json:"temperature"`
+			Humidity    string    `json:"humidity"`
+			CreatedAt   time.Time `json:"created_at"`
+		}
+		err := rows.Scan(&record.CO2, &record.Temperature, &record.Humidity, &record.CreatedAt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data = append(data, record)
 	}
 
 	json.NewEncoder(w).Encode(data)

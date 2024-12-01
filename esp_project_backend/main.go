@@ -18,6 +18,7 @@ func main() {
 	// 設定路由
 	http.HandleFunc("/data", sensorHandler.SaveSensorData)
 	http.HandleFunc("/latest", sensorHandler.GetLatestSensorData)
+	http.HandleFunc("/historical", sensorHandler.GetHistoricalData)
 
 	// 啟動伺服器
 	log.Println("伺服器啟動於 :8080 端口")
