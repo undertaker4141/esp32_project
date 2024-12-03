@@ -27,7 +27,7 @@ const App: React.FC = () => {
       setData(result.data);
     };
 
-    const interval = setInterval(fetchData, 1000); // 每秒獲取一次數據
+    const interval = setInterval(fetchData, 5000); // 每秒獲取一次數據
     fetchData(); // 初始獲取
 
     return () => clearInterval(interval); // 清除定時器

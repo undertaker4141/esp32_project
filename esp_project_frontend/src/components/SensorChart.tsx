@@ -16,6 +16,7 @@ interface SensorChartProps {
 const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
   const [data, setData] = useState<ChartData[]>([]);
   const [connectionError, setConnectionError] = useState(false);
+  const [noUpdateCount, setNoUpdateCount] = useState(0);
   const chartRef = useRef<ReactECharts>(null);
 
   const AlertCard = () => (
@@ -46,6 +47,10 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
       </div>
       <p className="mt-1 text-sm">
         感測器數據未更新，請檢查設備連線狀態
+        <br />
+        <span className="text-xs">
+          已停滯 {noUpdateCount * 5} 秒
+        </span>
       </p>
     </div>
   );
@@ -70,6 +75,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
         setData(prevData => {
           if (prevData.length === 0) {
             setConnectionError(false);
+            setNoUpdateCount(0);
             return [newDataPoint];
           }
 
@@ -78,11 +84,18 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
           if (lastData.co2 === newDataPoint.co2 && 
               lastData.temperature === newDataPoint.temperature && 
               lastData.humidity === newDataPoint.humidity) {
-            setConnectionError(true);
+            setNoUpdateCount(prev => {
+              const newCount = prev + 1;
+              if (newCount >= 2) {
+                setConnectionError(true);
+              }
+              return newCount;
+            });
             return prevData;
           }
 
           setConnectionError(false);
+          setNoUpdateCount(0);
           const newData = [...prevData, {
             ...newDataPoint,
             created_at: new Date().toISOString()
