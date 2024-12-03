@@ -15,36 +15,87 @@ interface SensorChartProps {
 
 const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
   const [data, setData] = useState<ChartData[]>([]);
+  const [connectionError, setConnectionError] = useState(false);
   const chartRef = useRef<ReactECharts>(null);
+
+  const AlertCard = () => (
+    <div 
+      className={`fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${
+        connectionError ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      style={{
+        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <svg 
+          className="w-6 h-6 animate-pulse" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+          />
+        </svg>
+        <span className="font-semibold">ESP32 連線異常</span>
+      </div>
+      <p className="mt-1 text-sm">
+        感測器數據未更新，請檢查設備連線狀態
+      </p>
+    </div>
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await axios.get('http://192.168.1.101:8080/historical');
         setData(result.data.reverse());
+        setConnectionError(false);
       } catch (error) {
         console.error('獲取數據失敗:', error);
+        setConnectionError(true);
       }
     };
 
     const updateData = async () => {
       try {
-        const result = await axios.get('http://localhost:8080/latest');
+        const result = await axios.get('http://192.168.1.101:8080/latest');
         const newDataPoint = result.data;
         
         setData(prevData => {
+          if (prevData.length === 0) {
+            setConnectionError(false);
+            return [newDataPoint];
+          }
+
+          const lastData = prevData[prevData.length - 1];
+
+          if (lastData.co2 === newDataPoint.co2 && 
+              lastData.temperature === newDataPoint.temperature && 
+              lastData.humidity === newDataPoint.humidity) {
+            setConnectionError(true);
+            return prevData;
+          }
+
+          setConnectionError(false);
           const newData = [...prevData, {
             ...newDataPoint,
             created_at: new Date().toISOString()
           }];
           
           if (newData.length > 100) {
-            return newData.slice(-100); // 只保留最後100筆數據
+            return newData.slice(-100);
           }
           return newData;
         });
       } catch (error) {
         console.error('更新數據失敗:', error);
+        setConnectionError(true);
       }
     };
 
@@ -245,6 +296,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
 
   return (
     <div className="relative">
+      <AlertCard />
       <div 
         className="absolute inset-0 z-0" 
         style={{

@@ -21,6 +21,6 @@ func main() {
 	http.HandleFunc("/historical", sensorHandler.GetHistoricalData)
 
 	// 啟動伺服器
-	log.Println("伺服器啟動於 :8080 端口")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("伺服器啟動於 0.0.0.0:8080 端口")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }
