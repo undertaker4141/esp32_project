@@ -86,7 +86,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
               lastData.humidity === newDataPoint.humidity) {
             setNoUpdateCount(prev => {
               const newCount = prev + 1;
-              if (newCount >= 2) {
+              if (newCount >= 3) {
                 setConnectionError(true);
               }
               return newCount;
