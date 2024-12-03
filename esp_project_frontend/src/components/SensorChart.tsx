@@ -1,6 +1,8 @@
 import ReactECharts from 'echarts-for-react';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import { useNotification } from '../hooks/useNotification';
+import AlertNotification from './AlertNotification';
 
 interface ChartData {
   co2: string;
@@ -18,6 +20,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
   const [connectionError, setConnectionError] = useState(false);
   const [noUpdateCount, setNoUpdateCount] = useState(0);
   const chartRef = useRef<ReactECharts>(null);
+  const { requestPermission, checkThresholds } = useNotification();
 
   const AlertCard = () => (
     <div 
@@ -56,6 +59,10 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
   );
 
   useEffect(() => {
+    requestPermission();
+  }, [requestPermission]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await axios.get('http://192.168.1.101:8080/historical');
@@ -71,6 +78,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
       try {
         const result = await axios.get('http://192.168.1.101:8080/latest');
         const newDataPoint = result.data;
+        checkThresholds(newDataPoint);
         
         setData(prevData => {
           if (prevData.length === 0) {
@@ -116,7 +124,7 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
     const intervalId = setInterval(updateData, 5000);
 
     return () => clearInterval(intervalId);
-  }, [type]);
+  }, [checkThresholds]);
 
   const getOption = () => {
     const dates = data.map(item => new Date(item.created_at).toLocaleTimeString());
@@ -310,6 +318,14 @@ const SensorChart: React.FC<SensorChartProps> = ({ type }) => {
   return (
     <div className="relative">
       <AlertCard />
+      <AlertNotification 
+        data={data[data.length - 1] || { co2: '0', temperature: '0', humidity: '0' }}
+        thresholds={{
+          co2: 1995,
+          temperature: 29.5,
+          humidity: 76.7
+        }}
+      />
       <div 
         className="absolute inset-0 z-0" 
         style={{
